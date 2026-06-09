@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Book a Seat"
+version = "1.0.0"
+id = "artifacts/book-a-seat"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 19979
+
+[services.development]
+run = "pnpm --filter @workspace/book-a-seat run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/book-a-seat", "run", "build" ]
+publicDir = "artifacts/book-a-seat/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19979"
+BASE_PATH = "/"

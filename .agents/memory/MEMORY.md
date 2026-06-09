@@ -1,0 +1,1 @@
+- [Book a Seat — architecture decisions](book-a-seat-arch.md) — JWT + analytics double-mount + seed-on-boot patterns worth preserving

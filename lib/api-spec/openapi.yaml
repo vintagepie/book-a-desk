@@ -1,22 +1,39 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Book a Seat – Workspace & Meeting Room Management API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication
+  - name: users
+    description: User management
+  - name: desks
+    description: Desk management
+  - name: desk-bookings
+    description: Desk booking operations
+  - name: meeting-rooms
+    description: Meeting room management
+  - name: meeting-room-bookings
+    description: Meeting room booking operations
+  - name: notifications
+    description: Notification management
+  - name: analytics
+    description: Analytics and reporting
+  - name: maintenance
+    description: Maintenance management
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,7 +41,864 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # AUTH
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  # USERS
+  /users:
+    get:
+      operationId: listUsers
+      tags: [users]
+      summary: List all users (admin only)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+    post:
+      operationId: createUser
+      tags: [users]
+      summary: Create a new user (admin only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserInput"
+      responses:
+        "201":
+          description: Created user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /users/{id}:
+    get:
+      operationId: getUser
+      tags: [users]
+      summary: Get user by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+    patch:
+      operationId: updateUser
+      tags: [users]
+      summary: Update user
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserUpdate"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+    delete:
+      operationId: deleteUser
+      tags: [users]
+      summary: Delete user (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # DESKS
+  /desks:
+    get:
+      operationId: listDesks
+      tags: [desks]
+      summary: List desks with optional availability filter
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: date
+          in: query
+          schema:
+            type: string
+        - name: floor
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: status
+          in: query
+          schema:
+            type: ["string", "null"]
+      responses:
+        "200":
+          description: List of desks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Desk"
+    post:
+      operationId: createDesk
+      tags: [desks]
+      summary: Create a new desk (admin only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeskInput"
+      responses:
+        "201":
+          description: Created desk
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Desk"
+
+  /desks/{id}:
+    get:
+      operationId: getDesk
+      tags: [desks]
+      summary: Get desk by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Desk
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Desk"
+    patch:
+      operationId: updateDesk
+      tags: [desks]
+      summary: Update desk (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeskUpdate"
+      responses:
+        "200":
+          description: Updated desk
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Desk"
+    delete:
+      operationId: deleteDesk
+      tags: [desks]
+      summary: Delete desk (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /desks/{id}/maintenance:
+    post:
+      operationId: markDeskMaintenance
+      tags: [desks]
+      summary: Mark desk under maintenance (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MaintenanceInput"
+      responses:
+        "200":
+          description: Updated desk
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Desk"
+
+  /desks/{id}/restore:
+    post:
+      operationId: restoreDesk
+      tags: [desks]
+      summary: Restore desk from maintenance (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated desk
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Desk"
+
+  # DESK BOOKINGS
+  /desk-bookings:
+    get:
+      operationId: listDeskBookings
+      tags: [desk-bookings]
+      summary: List desk bookings
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: date
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: status
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: page
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: limit
+          in: query
+          schema:
+            type: ["integer", "null"]
+      responses:
+        "200":
+          description: Paginated desk bookings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedDeskBookings"
+    post:
+      operationId: createDeskBooking
+      tags: [desk-bookings]
+      summary: Book a desk
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeskBookingInput"
+      responses:
+        "201":
+          description: Created booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeskBooking"
+
+  /desk-bookings/{id}:
+    get:
+      operationId: getDeskBooking
+      tags: [desk-bookings]
+      summary: Get desk booking by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Desk booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeskBooking"
+
+  /desk-bookings/{id}/cancel:
+    post:
+      operationId: cancelDeskBooking
+      tags: [desk-bookings]
+      summary: Cancel a desk booking
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Cancelled booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeskBooking"
+
+  /desk-bookings/{id}/checkin:
+    post:
+      operationId: checkInDesk
+      tags: [desk-bookings]
+      summary: QR check-in for desk booking
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CheckInInput"
+      responses:
+        "200":
+          description: Checked in booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeskBooking"
+
+  # MEETING ROOMS
+  /meeting-rooms:
+    get:
+      operationId: listMeetingRooms
+      tags: [meeting-rooms]
+      summary: List meeting rooms
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: date
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: capacity
+          in: query
+          schema:
+            type: ["integer", "null"]
+      responses:
+        "200":
+          description: List of meeting rooms
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MeetingRoom"
+    post:
+      operationId: createMeetingRoom
+      tags: [meeting-rooms]
+      summary: Create a meeting room (admin only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MeetingRoomInput"
+      responses:
+        "201":
+          description: Created meeting room
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeetingRoom"
+
+  /meeting-rooms/{id}:
+    get:
+      operationId: getMeetingRoom
+      tags: [meeting-rooms]
+      summary: Get meeting room by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Meeting room
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeetingRoom"
+    patch:
+      operationId: updateMeetingRoom
+      tags: [meeting-rooms]
+      summary: Update meeting room (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MeetingRoomUpdate"
+      responses:
+        "200":
+          description: Updated meeting room
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeetingRoom"
+    delete:
+      operationId: deleteMeetingRoom
+      tags: [meeting-rooms]
+      summary: Delete meeting room (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # MEETING ROOM BOOKINGS
+  /meeting-room-bookings:
+    get:
+      operationId: listMeetingRoomBookings
+      tags: [meeting-room-bookings]
+      summary: List meeting room bookings
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: roomId
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: date
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: userId
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: page
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: limit
+          in: query
+          schema:
+            type: ["integer", "null"]
+      responses:
+        "200":
+          description: Paginated meeting room bookings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedMeetingRoomBookings"
+    post:
+      operationId: createMeetingRoomBooking
+      tags: [meeting-room-bookings]
+      summary: Book a meeting room (team lead only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MeetingRoomBookingInput"
+      responses:
+        "201":
+          description: Created meeting room booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeetingRoomBooking"
+
+  /meeting-room-bookings/{id}:
+    get:
+      operationId: getMeetingRoomBooking
+      tags: [meeting-room-bookings]
+      summary: Get meeting room booking by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Meeting room booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeetingRoomBooking"
+    patch:
+      operationId: updateMeetingRoomBooking
+      tags: [meeting-room-bookings]
+      summary: Update meeting room booking (team lead only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MeetingRoomBookingUpdate"
+      responses:
+        "200":
+          description: Updated booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeetingRoomBooking"
+
+  /meeting-room-bookings/{id}/cancel:
+    post:
+      operationId: cancelMeetingRoomBooking
+      tags: [meeting-room-bookings]
+      summary: Cancel a meeting room booking (team lead only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Cancelled booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeetingRoomBooking"
+
+  # NOTIFICATIONS
+  /notifications:
+    get:
+      operationId: listNotifications
+      tags: [notifications]
+      summary: List notifications for current user
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: unreadOnly
+          in: query
+          schema:
+            type: ["boolean", "null"]
+      responses:
+        "200":
+          description: List of notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Notification"
+
+  /notifications/{id}/read:
+    post:
+      operationId: markNotificationRead
+      tags: [notifications]
+      summary: Mark notification as read
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated notification
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Notification"
+
+  /notifications/read-all:
+    post:
+      operationId: markAllNotificationsRead
+      tags: [notifications]
+      summary: Mark all notifications as read
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  # ANALYTICS
+  /analytics/overview:
+    get:
+      operationId: getAnalyticsOverview
+      tags: [analytics]
+      summary: Get analytics overview (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: startDate
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: endDate
+          in: query
+          schema:
+            type: ["string", "null"]
+      responses:
+        "200":
+          description: Analytics overview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalyticsOverview"
+
+  /analytics/desk-utilization:
+    get:
+      operationId: getDeskUtilization
+      tags: [analytics]
+      summary: Get desk utilization report (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: startDate
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: endDate
+          in: query
+          schema:
+            type: ["string", "null"]
+      responses:
+        "200":
+          description: Desk utilization
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DeskUtilizationItem"
+
+  /analytics/room-utilization:
+    get:
+      operationId: getRoomUtilization
+      tags: [analytics]
+      summary: Get meeting room utilization (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: startDate
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: endDate
+          in: query
+          schema:
+            type: ["string", "null"]
+      responses:
+        "200":
+          description: Room utilization
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RoomUtilizationItem"
+
+  /analytics/daily-occupancy:
+    get:
+      operationId: getDailyOccupancy
+      tags: [analytics]
+      summary: Get daily occupancy trend (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: startDate
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: endDate
+          in: query
+          schema:
+            type: ["string", "null"]
+      responses:
+        "200":
+          description: Daily occupancy
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DailyOccupancyItem"
+
+  # DASHBOARD SUMMARY
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [analytics]
+      summary: Get dashboard summary for logged-in user
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  # MAINTENANCE LOGS
+  /maintenance-logs:
+    get:
+      operationId: listMaintenanceLogs
+      tags: [maintenance]
+      summary: List maintenance logs (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: deskId
+          in: query
+          schema:
+            type: ["integer", "null"]
+      responses:
+        "200":
+          description: Maintenance logs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MaintenanceLog"
+
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
   schemas:
     HealthStatus:
       type: object
@@ -34,3 +908,452 @@ components:
       required:
         - status
 
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+
+    AuthResponse:
+      type: object
+      required: [token, user]
+      properties:
+        token:
+          type: string
+        user:
+          $ref: "#/components/schemas/User"
+
+    User:
+      type: object
+      required: [id, email, name, role, createdAt]
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        name:
+          type: string
+        role:
+          type: string
+          enum: [employee, team_lead, admin]
+        department:
+          type: ["string", "null"]
+        avatarUrl:
+          type: ["string", "null"]
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+
+    UserInput:
+      type: object
+      required: [email, name, role, password]
+      properties:
+        email:
+          type: string
+        name:
+          type: string
+        role:
+          type: string
+          enum: [employee, team_lead, admin]
+        password:
+          type: string
+        department:
+          type: string
+
+    UserUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        role:
+          type: string
+          enum: [employee, team_lead, admin]
+        department:
+          type: string
+        isActive:
+          type: boolean
+
+    Desk:
+      type: object
+      required: [id, name, floor, status, qrCode, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        floor:
+          type: string
+        zone:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [available, booked, maintenance]
+        amenities:
+          type: ["string", "null"]
+        qrCode:
+          type: string
+        isAvailable:
+          type: boolean
+        createdAt:
+          type: string
+
+    DeskInput:
+      type: object
+      required: [name, floor]
+      properties:
+        name:
+          type: string
+        floor:
+          type: string
+        zone:
+          type: string
+        amenities:
+          type: string
+
+    DeskUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        floor:
+          type: string
+        zone:
+          type: string
+        amenities:
+          type: string
+        status:
+          type: string
+
+    MaintenanceInput:
+      type: object
+      required: [reason]
+      properties:
+        reason:
+          type: string
+
+    DeskBooking:
+      type: object
+      required: [id, deskId, userId, date, status, createdAt]
+      properties:
+        id:
+          type: integer
+        deskId:
+          type: integer
+        userId:
+          type: integer
+        date:
+          type: string
+        status:
+          type: string
+          enum: [confirmed, checked_in, cancelled, expired]
+        checkedInAt:
+          type: ["string", "null"]
+        cancelledAt:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        desk:
+          $ref: "#/components/schemas/Desk"
+        user:
+          $ref: "#/components/schemas/User"
+
+    DeskBookingInput:
+      type: object
+      required: [deskId, date]
+      properties:
+        deskId:
+          type: integer
+        date:
+          type: string
+
+    CheckInInput:
+      type: object
+      required: [qrCode]
+      properties:
+        qrCode:
+          type: string
+
+    PaginatedDeskBookings:
+      type: object
+      required: [data, total, page, limit]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/DeskBooking"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    MeetingRoom:
+      type: object
+      required: [id, name, capacity, floor, status, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        capacity:
+          type: integer
+        floor:
+          type: string
+        status:
+          type: string
+          enum: [available, maintenance]
+        facilities:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    MeetingRoomInput:
+      type: object
+      required: [name, capacity, floor]
+      properties:
+        name:
+          type: string
+        capacity:
+          type: integer
+        floor:
+          type: string
+        facilities:
+          type: string
+        description:
+          type: string
+
+    MeetingRoomUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        capacity:
+          type: integer
+        floor:
+          type: string
+        facilities:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+
+    MeetingRoomBooking:
+      type: object
+      required: [id, roomId, userId, title, startTime, endTime, status, createdAt]
+      properties:
+        id:
+          type: integer
+        roomId:
+          type: integer
+        userId:
+          type: integer
+        title:
+          type: string
+        description:
+          type: ["string", "null"]
+        startTime:
+          type: string
+        endTime:
+          type: string
+        status:
+          type: string
+          enum: [confirmed, cancelled]
+        attendees:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        room:
+          $ref: "#/components/schemas/MeetingRoom"
+        user:
+          $ref: "#/components/schemas/User"
+
+    MeetingRoomBookingInput:
+      type: object
+      required: [roomId, title, startTime, endTime]
+      properties:
+        roomId:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        startTime:
+          type: string
+        endTime:
+          type: string
+        attendees:
+          type: string
+
+    MeetingRoomBookingUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        startTime:
+          type: string
+        endTime:
+          type: string
+        attendees:
+          type: string
+
+    PaginatedMeetingRoomBookings:
+      type: object
+      required: [data, total, page, limit]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/MeetingRoomBooking"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    Notification:
+      type: object
+      required: [id, userId, type, message, isRead, createdAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        type:
+          type: string
+          enum: [booking_confirmed, booking_cancelled, booking_expired, maintenance_alert, meeting_reminder, check_in_reminder]
+        message:
+          type: string
+        isRead:
+          type: boolean
+        createdAt:
+          type: string
+
+    AnalyticsOverview:
+      type: object
+      required: [totalDesks, totalRooms, totalUsers, todayDeskBookings, todayRoomBookings, occupancyRate, checkInRate, maintenanceDesks]
+      properties:
+        totalDesks:
+          type: integer
+        totalRooms:
+          type: integer
+        totalUsers:
+          type: integer
+        todayDeskBookings:
+          type: integer
+        todayRoomBookings:
+          type: integer
+        occupancyRate:
+          type: number
+        checkInRate:
+          type: number
+        maintenanceDesks:
+          type: integer
+
+    DeskUtilizationItem:
+      type: object
+      required: [deskId, deskName, floor, totalBookings, checkIns, cancellations, utilizationRate]
+      properties:
+        deskId:
+          type: integer
+        deskName:
+          type: string
+        floor:
+          type: string
+        totalBookings:
+          type: integer
+        checkIns:
+          type: integer
+        cancellations:
+          type: integer
+        utilizationRate:
+          type: number
+
+    RoomUtilizationItem:
+      type: object
+      required: [roomId, roomName, floor, capacity, totalBookings, totalHours, utilizationRate]
+      properties:
+        roomId:
+          type: integer
+        roomName:
+          type: string
+        floor:
+          type: string
+        capacity:
+          type: integer
+        totalBookings:
+          type: integer
+        totalHours:
+          type: number
+        utilizationRate:
+          type: number
+
+    DailyOccupancyItem:
+      type: object
+      required: [date, deskBookings, roomBookings, occupancyRate]
+      properties:
+        date:
+          type: string
+        deskBookings:
+          type: integer
+        roomBookings:
+          type: integer
+        occupancyRate:
+          type: number
+
+    DashboardSummary:
+      type: object
+      required: [todayBooking, upcomingMeetings, recentBookings, unreadNotifications, availableDesksToday]
+      properties:
+        todayBooking:
+          type: ["object", "null"]
+        upcomingMeetings:
+          type: array
+          items:
+            $ref: "#/components/schemas/MeetingRoomBooking"
+        recentBookings:
+          type: array
+          items:
+            $ref: "#/components/schemas/DeskBooking"
+        unreadNotifications:
+          type: integer
+        availableDesksToday:
+          type: integer
+
+    MaintenanceLog:
+      type: object
+      required: [id, deskId, action, reason, performedBy, createdAt]
+      properties:
+        id:
+          type: integer
+        deskId:
+          type: integer
+        action:
+          type: string
+        reason:
+          type: ["string", "null"]
+        performedBy:
+          type: integer
+        createdAt:
+          type: string
+        desk:
+          $ref: "#/components/schemas/Desk"
+
+    SuccessResponse:
+      type: object
+      required: [success]
+      properties:
+        success:
+          type: boolean
+        message:
+          type: ["string", "null"]
