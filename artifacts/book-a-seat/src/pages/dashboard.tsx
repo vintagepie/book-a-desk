@@ -97,11 +97,11 @@ export default function Dashboard() {
           <Card>
             <CardContent className="p-5">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Occupancy Rate</span>
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Available Desks</span>
                 <TrendingUp className="w-4 h-4 text-primary" />
               </div>
-              <div className="text-3xl font-bold">{summaryLoading ? "—" : `${Math.round((summary?.occupancyRate ?? 0) * 100)}%`}</div>
-              <p className="text-xs text-muted-foreground mt-1">today</p>
+              <div className="text-3xl font-bold">{summaryLoading ? "—" : (summary?.availableDesksToday ?? 0)}</div>
+              <p className="text-xs text-muted-foreground mt-1">this floor</p>
             </CardContent>
           </Card>
         )}

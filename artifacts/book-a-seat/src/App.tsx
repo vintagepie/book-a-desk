@@ -12,6 +12,7 @@ import MeetingRooms from "@/pages/meeting-rooms";
 import BookMeetingRoom from "@/pages/meeting-rooms/book";
 import MyBookings from "@/pages/my-bookings";
 import MyMeetings from "@/pages/my-meetings";
+import FloorMap from "@/pages/floor-map";
 import CheckIn from "@/pages/check-in";
 import Notifications from "@/pages/notifications";
 import AdminDesks from "@/pages/admin/desks";
@@ -72,6 +73,9 @@ function Router() {
         </Route>
         <Route path="/desks/book">
           <ProtectedRoute component={BookDesk} />
+        </Route>
+        <Route path="/floor-map">
+          <ProtectedRoute component={FloorMap} />
         </Route>
         <Route path="/meeting-rooms">
           <ProtectedRoute component={MeetingRooms} />
