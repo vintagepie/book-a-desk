@@ -1,151 +1,143 @@
 import { db, usersTable, desksTable, meetingRoomsTable, deskBookingsTable, meetingRoomBookingsTable, notificationsTable, maintenanceLogsTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { v4 as uuidv4 } from "uuid";
 import { logger } from "./logger";
 
+// 70 workplaces + 6 middle-area desks
+// Row 1: W001–W008  (8 desks, wall-facing, top)
+// Row 2: W009–W024  (16 desks, 8 facing 8)
+// Row 3: W025–W040  (16 desks, 8 facing 8)
+// Row 4: W041–W056  (16 desks, 8 facing 8)
+// Row 5: W057–W064  (8 desks, wall-facing, bottom)
+// Middle: W065–W070 (6 desks beside meeting rooms, 3 facing 3)
+// Meeting rooms: MR-01, MR-02
+
+function qr() { return `QR-${uuidv4().toUpperCase().slice(0, 8)}`; }
+
+function makeDesks() {
+  const desks: { name: string; floor: string; zone: string; amenities: string; qrCode: string }[] = [];
+
+  // Row 1: W001–W008
+  for (let i = 1; i <= 8; i++) {
+    desks.push({ name: `W${String(i).padStart(3, "0")}`, floor: "Floor 1", zone: "Row 1", amenities: "Standard desk, 1 monitor", qrCode: qr() });
+  }
+  // Row 2: W009–W024
+  for (let i = 9; i <= 24; i++) {
+    desks.push({ name: `W${String(i).padStart(3, "0")}`, floor: "Floor 1", zone: "Row 2", amenities: "Standard desk, 2 monitors", qrCode: qr() });
+  }
+  // Row 3: W025–W040
+  for (let i = 25; i <= 40; i++) {
+    desks.push({ name: `W${String(i).padStart(3, "0")}`, floor: "Floor 1", zone: "Row 3", amenities: "Standard desk, 2 monitors", qrCode: qr() });
+  }
+  // Row 4: W041–W056
+  for (let i = 41; i <= 56; i++) {
+    desks.push({ name: `W${String(i).padStart(3, "0")}`, floor: "Floor 1", zone: "Row 4", amenities: "Standard desk, 2 monitors", qrCode: qr() });
+  }
+  // Row 5: W057–W064
+  for (let i = 57; i <= 64; i++) {
+    desks.push({ name: `W${String(i).padStart(3, "0")}`, floor: "Floor 1", zone: "Row 5", amenities: "Standing desk, 1 monitor", qrCode: qr() });
+  }
+  // Middle area W065–W070
+  for (let i = 65; i <= 70; i++) {
+    desks.push({ name: `W${String(i).padStart(3, "0")}`, floor: "Floor 1", zone: "Middle Area", amenities: "Compact desk, 1 monitor", qrCode: qr() });
+  }
+
+  return desks;
+}
+
 export async function seedDatabase() {
   try {
-    // Check if already seeded
     const existing = await db.select().from(usersTable).limit(1);
     if (existing.length > 0) {
       logger.info("Database already seeded, skipping");
       return;
     }
 
-    logger.info("Seeding database...");
-
+    logger.info("Seeding database with new floor layout...");
     const hash = (p: string) => bcrypt.hash(p, 12);
 
-    // Users
-    const [admin] = await db.insert(usersTable).values({
-      email: "admin@company.com",
-      name: "Alex Admin",
-      passwordHash: await hash("admin123"),
-      role: "admin",
-      department: "IT",
-    }).returning();
+    // ── Users ──────────────────────────────────────────────────
+    const [admin] = await db.insert(usersTable).values({ email: "admin@company.com", name: "Alex Admin", passwordHash: await hash("admin123"), role: "admin", department: "IT" }).returning();
+    const [teamlead] = await db.insert(usersTable).values({ email: "lead@company.com", name: "Sam Lead", passwordHash: await hash("lead123"), role: "team_lead", department: "Engineering" }).returning();
+    const [employee1] = await db.insert(usersTable).values({ email: "jane@company.com", name: "Jane Doe", passwordHash: await hash("pass123"), role: "employee", department: "Marketing" }).returning();
+    const [employee2] = await db.insert(usersTable).values({ email: "john@company.com", name: "John Smith", passwordHash: await hash("pass123"), role: "employee", department: "Engineering" }).returning();
+    const [employee3] = await db.insert(usersTable).values({ email: "emily@company.com", name: "Emily Chen", passwordHash: await hash("pass123"), role: "employee", department: "Design" }).returning();
+    const [employee4] = await db.insert(usersTable).values({ email: "mike@company.com", name: "Mike Torres", passwordHash: await hash("pass123"), role: "employee", department: "Sales" }).returning();
 
-    const [teamlead] = await db.insert(usersTable).values({
-      email: "lead@company.com",
-      name: "Sam Lead",
-      passwordHash: await hash("lead123"),
-      role: "team_lead",
-      department: "Engineering",
-    }).returning();
+    // ── Desks ──────────────────────────────────────────────────
+    const deskRows = makeDesks();
+    const desks = await db.insert(desksTable).values(deskRows).returning();
 
-    const [employee1] = await db.insert(usersTable).values({
-      email: "jane@company.com",
-      name: "Jane Doe",
-      passwordHash: await hash("pass123"),
-      role: "employee",
-      department: "Marketing",
-    }).returning();
+    // Put a handful under maintenance
+    const maintenanceIdxs = [2, 15, 38, 52]; // W003, W016, W039, W053
+    for (const idx of maintenanceIdxs) {
+      await db.update(desksTable).set({ status: "maintenance" }).where(
+        (await import("drizzle-orm")).eq(desksTable.id, desks[idx].id)
+      );
+      await db.insert(maintenanceLogsTable).values({ deskId: desks[idx].id, action: "marked_maintenance", reason: "Scheduled equipment replacement", performedBy: admin.id });
+    }
 
-    const [employee2] = await db.insert(usersTable).values({
-      email: "john@company.com",
-      name: "John Smith",
-      passwordHash: await hash("pass123"),
-      role: "employee",
-      department: "Engineering",
-    }).returning();
-
-    // Desks — Floor 1
-    const deskData = [
-      { name: "A-101", floor: "Floor 1", zone: "Zone A", amenities: "Standing desk, 2 monitors" },
-      { name: "A-102", floor: "Floor 1", zone: "Zone A", amenities: "Standard desk, 1 monitor" },
-      { name: "A-103", floor: "Floor 1", zone: "Zone A", amenities: "Standard desk" },
-      { name: "B-101", floor: "Floor 1", zone: "Zone B", amenities: "Standing desk, whiteboard" },
-      { name: "B-102", floor: "Floor 1", zone: "Zone B", amenities: "Standard desk, docking station" },
-      { name: "C-101", floor: "Floor 2", zone: "Zone C", amenities: "Standard desk, 2 monitors" },
-      { name: "C-102", floor: "Floor 2", zone: "Zone C", amenities: "Standard desk" },
-      { name: "C-103", floor: "Floor 2", zone: "Zone C", amenities: "Standing desk" },
-      { name: "D-101", floor: "Floor 2", zone: "Zone D", amenities: "Quiet zone, 1 monitor" },
-      { name: "D-102", floor: "Floor 2", zone: "Zone D", amenities: "Quiet zone, standing desk" },
-    ];
-
-    const desks = await db.insert(desksTable).values(
-      deskData.map(d => ({ ...d, qrCode: `DESK-${uuidv4().toUpperCase().slice(0, 8)}` }))
-    ).returning();
-
-    // Mark one desk under maintenance
-    await db.update(desksTable).set({ status: "maintenance" }).where(eq(desksTable.id, desks[4].id));
-    await db.insert(maintenanceLogsTable).values({
-      deskId: desks[4].id,
-      action: "marked_maintenance",
-      reason: "Broken monitor stand needs replacement",
-      performedBy: admin.id,
-    });
-
-    // Meeting rooms
+    // ── Meeting rooms ──────────────────────────────────────────
     const rooms = await db.insert(meetingRoomsTable).values([
-      { name: "Boardroom Alpha", capacity: 12, floor: "Floor 1", facilities: "Projector, Video conferencing, Whiteboard", description: "Large boardroom for all-hands meetings" },
-      { name: "Focus Room 1", capacity: 4, floor: "Floor 1", facilities: "TV screen, Whiteboard", description: "Small focus room for quick syncs" },
-      { name: "Innovation Lab", capacity: 8, floor: "Floor 2", facilities: "Smartboard, Video conferencing, Breakout area", description: "Creative space for workshops and brainstorming" },
-      { name: "Executive Suite", capacity: 6, floor: "Floor 2", facilities: "Premium AV, Video conferencing", description: "Executive meeting space" },
+      { name: "MR-01", capacity: 8, floor: "Floor 1", facilities: "Projector, Video conferencing, Whiteboard", description: "Main meeting room — top-left of floor" },
+      { name: "MR-02", capacity: 6, floor: "Floor 1", facilities: "TV screen, Video conferencing", description: "Secondary meeting room — below MR-01" },
     ]).returning();
 
-    // Some desk bookings
+    // ── Sample bookings ────────────────────────────────────────
     const today = new Date().toISOString().slice(0, 10);
-    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
     const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
 
-    await db.insert(deskBookingsTable).values([
-      { deskId: desks[0].id, userId: employee1.id, date: today, status: "confirmed" },
-      { deskId: desks[1].id, userId: employee2.id, date: today, status: "checked_in", checkedInAt: new Date() },
-      { deskId: desks[2].id, userId: teamlead.id, date: today, status: "confirmed" },
-      { deskId: desks[0].id, userId: employee1.id, date: yesterday, status: "checked_in", checkedInAt: new Date(Date.now() - 86400000) },
-      { deskId: desks[3].id, userId: employee2.id, date: yesterday, status: "cancelled", cancelledAt: new Date(Date.now() - 86400000) },
-      { deskId: desks[5].id, userId: employee1.id, date: tomorrow, status: "confirmed" },
-    ]);
+    // Scatter bookings across the floor so the map looks realistic
+    const bookingPairs: [number, typeof employee1][] = [
+      [0, employee1],   // W001
+      [5, employee2],   // W006
+      [8, teamlead],    // W009
+      [13, employee3],  // W014
+      [20, employee4],  // W021
+      [27, admin],      // W028
+      [34, employee1],  // W035
+      [44, employee2],  // W045
+      [50, employee3],  // W051
+      [57, employee4],  // W058
+      [64, teamlead],   // W065
+    ];
 
-    // Meeting room bookings
-    const now = new Date();
-    const meetingStart = new Date(now);
-    meetingStart.setHours(14, 0, 0, 0);
-    const meetingEnd = new Date(now);
-    meetingEnd.setHours(15, 30, 0, 0);
+    for (const [idx, user] of bookingPairs) {
+      if (desks[idx]) {
+        await db.insert(deskBookingsTable).values({ deskId: desks[idx].id, userId: user.id, date: today, status: "confirmed" });
+      }
+    }
 
-    const tomorrowMeetingStart = new Date(Date.now() + 86400000);
-    tomorrowMeetingStart.setHours(10, 0, 0, 0);
-    const tomorrowMeetingEnd = new Date(Date.now() + 86400000);
-    tomorrowMeetingEnd.setHours(11, 0, 0, 0);
+    // A couple already checked in
+    const checkinPairs: [number, typeof employee1][] = [
+      [10, employee1],  // W011
+      [25, employee2],  // W026
+    ];
+    for (const [idx, user] of checkinPairs) {
+      if (desks[idx]) {
+        await db.insert(deskBookingsTable).values({ deskId: desks[idx].id, userId: user.id, date: today, status: "checked_in", checkedInAt: new Date() });
+      }
+    }
 
-    await db.insert(meetingRoomBookingsTable).values([
-      {
-        roomId: rooms[0].id,
-        userId: teamlead.id,
-        title: "Q4 Planning Session",
-        description: "Quarterly planning with the engineering team",
-        startTime: meetingStart,
-        endTime: meetingEnd,
-        status: "confirmed",
-        attendees: "jane@company.com, john@company.com, admin@company.com",
-      },
-      {
-        roomId: rooms[1].id,
-        userId: teamlead.id,
-        title: "Sprint Review",
-        description: "Weekly sprint review",
-        startTime: tomorrowMeetingStart,
-        endTime: tomorrowMeetingEnd,
-        status: "confirmed",
-        attendees: "john@company.com",
-      },
-    ]);
+    // Tomorrow bookings
+    await db.insert(deskBookingsTable).values({ deskId: desks[1].id, userId: employee3.id, date: tomorrow, status: "confirmed" });
+    await db.insert(deskBookingsTable).values({ deskId: desks[60].id, userId: employee4.id, date: tomorrow, status: "confirmed" });
 
-    // Notifications
+    // ── Meeting room bookings ──────────────────────────────────
+    const todayStart = new Date(); todayStart.setHours(10, 0, 0, 0);
+    const todayEnd = new Date(); todayEnd.setHours(11, 30, 0, 0);
+    await db.insert(meetingRoomBookingsTable).values({ roomId: rooms[0].id, userId: teamlead.id, title: "Sprint Planning", startTime: todayStart, endTime: todayEnd, status: "confirmed", attendees: "jane@company.com, john@company.com" });
+
+    // ── Notifications ──────────────────────────────────────────
     await db.insert(notificationsTable).values([
-      { userId: employee1.id, type: "booking_confirmed", message: `Your desk booking for ${today} is confirmed. Enjoy your workspace!`, isRead: false },
-      { userId: employee2.id, type: "booking_confirmed", message: `Your desk booking for ${today} is confirmed.`, isRead: true },
-      { userId: teamlead.id, type: "booking_confirmed", message: "Meeting room 'Boardroom Alpha' booked for Q4 Planning Session.", isRead: false },
-      { userId: employee1.id, type: "check_in_reminder", message: "Reminder: Please check in to your desk by 9:45 AM to keep your reservation.", isRead: false },
-      { userId: employee1.id, type: "booking_confirmed", message: `Your desk booking for ${tomorrow} is confirmed.`, isRead: false },
+      { userId: employee1.id, type: "booking_confirmed", message: "Your desk W001 is booked for today.", isRead: false },
+      { userId: employee2.id, type: "booking_confirmed", message: "Your desk W006 is booked for today.", isRead: false },
+      { userId: teamlead.id, type: "booking_confirmed", message: "Meeting room MR-01 booked for Sprint Planning.", isRead: false },
     ]);
 
-    logger.info("Database seeded successfully");
-    logger.info("Demo accounts: admin@company.com/admin123 | lead@company.com/lead123 | jane@company.com/pass123");
+    logger.info("Database seeded — 70 desks (W001–W070), 2 meeting rooms (MR-01, MR-02)");
   } catch (err) {
     logger.error({ err }, "Seeding failed");
+    throw err;
   }
 }
