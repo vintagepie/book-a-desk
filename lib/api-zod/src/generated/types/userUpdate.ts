@@ -12,4 +12,6 @@ export interface UserUpdate {
   role?: UserUpdateRole;
   department?: string;
   isActive?: boolean;
+  /** Set a new password (admin only) */
+  password?: string;
 }

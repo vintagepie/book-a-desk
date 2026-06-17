@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Monitor } from "lucide-react";
+import { Monitor, ShieldCheck, ChevronDown, ChevronUp } from "lucide-react";
 
 const DEMO_ACCOUNTS = [
   { label: "Admin", email: "admin@company.com", password: "admin123", description: "Full access" },
@@ -17,6 +17,7 @@ const DEMO_ACCOUNTS = [
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showDemo, setShowDemo] = useState(false);
   const { login, isAuthenticated } = useAuth();
   const [, setLocation] = useLocation();
   const loginMutation = useLogin();
@@ -37,27 +38,32 @@ export default function Login() {
           setLocation("/dashboard");
         },
         onError: () => {
-          toast.error("Invalid email or password");
+          toast.error("Invalid email or password. Contact your admin if you need access.");
         },
       }
     );
   };
 
-  const fillDemo = (acc: (typeof DEMO_ACCOUNTS)[0]) => {
-    setEmail(acc.email);
-    setPassword(acc.password);
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
-      <div className="w-full max-w-sm space-y-6">
-        {/* Brand header */}
+      <div className="w-full max-w-sm space-y-5">
+
+        {/* Brand */}
         <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary text-primary-foreground mb-2">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary text-primary-foreground mb-2 shadow-md">
             <Monitor className="w-7 h-7" />
           </div>
           <h1 className="text-2xl font-bold">Book a Seat</h1>
           <p className="text-sm text-muted-foreground">Workspace & Meeting Room Management</p>
+        </div>
+
+        {/* Access policy banner */}
+        <div className="flex items-start gap-2.5 p-3 rounded-lg bg-primary/5 border border-primary/20">
+          <ShieldCheck className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+          <p className="text-xs text-primary/80 leading-relaxed">
+            <span className="font-semibold text-primary">Invite-only access.</span>{" "}
+            Your account must be registered by an admin before you can sign in.
+          </p>
         </div>
 
         {/* Login card */}
@@ -92,30 +98,44 @@ export default function Login() {
               {loginMutation.isPending ? "Signing in…" : "Sign In"}
             </Button>
           </form>
+          <p className="text-center text-xs text-muted-foreground pt-1">
+            Don't have access?{" "}
+            <span className="text-primary font-medium">Contact your administrator.</span>
+          </p>
         </div>
 
-        {/* Demo accounts */}
-        <div className="border rounded-xl bg-card shadow-sm p-4 space-y-3">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground text-center">
-            Demo Accounts — click to fill
-          </p>
-          <div className="grid grid-cols-3 gap-2">
-            {DEMO_ACCOUNTS.map((acc) => (
-              <button
-                key={acc.email}
-                type="button"
-                onClick={() => fillDemo(acc)}
-                className="flex flex-col items-center gap-1 p-2.5 rounded-lg border border-border hover:bg-muted/60 hover:border-primary/40 transition-colors text-left"
-              >
-                <span className="text-xs font-semibold text-foreground">{acc.label}</span>
-                <span className="text-[10px] text-muted-foreground">{acc.description}</span>
-              </button>
-            ))}
-          </div>
-          <p className="text-[11px] text-center text-muted-foreground/70">
-            Click a role above, then press Sign In
-          </p>
+        {/* Demo accounts (collapsible) */}
+        <div className="border rounded-xl bg-card shadow-sm overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setShowDemo((v) => !v)}
+            className="w-full flex items-center justify-between px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:bg-muted/40 transition-colors"
+          >
+            <span>Demo Accounts</span>
+            {showDemo ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          </button>
+          {showDemo && (
+            <div className="px-4 pb-4 space-y-3 border-t">
+              <p className="text-[11px] text-muted-foreground pt-3">
+                Click a role to pre-fill credentials, then sign in.
+              </p>
+              <div className="grid grid-cols-3 gap-2">
+                {DEMO_ACCOUNTS.map((acc) => (
+                  <button
+                    key={acc.email}
+                    type="button"
+                    onClick={() => { setEmail(acc.email); setPassword(acc.password); setShowDemo(false); }}
+                    className="flex flex-col items-center gap-1 p-2.5 rounded-lg border border-border hover:bg-muted/60 hover:border-primary/40 transition-colors"
+                  >
+                    <span className="text-xs font-semibold text-foreground">{acc.label}</span>
+                    <span className="text-[10px] text-muted-foreground">{acc.description}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
+
       </div>
     </div>
   );

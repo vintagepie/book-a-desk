@@ -112,7 +112,8 @@ export const UpdateUserBody = zod.object({
   "name": zod.string().optional(),
   "role": zod.enum(['employee', 'team_lead', 'admin']).optional(),
   "department": zod.string().optional(),
-  "isActive": zod.boolean().optional()
+  "isActive": zod.boolean().optional(),
+  "password": zod.string().optional().describe('Set a new password (admin only)')
 })
 
 export const UpdateUserResponse = zod.object({

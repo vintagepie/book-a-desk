@@ -976,6 +976,9 @@ components:
           type: string
         isActive:
           type: boolean
+        password:
+          type: string
+          description: Set a new password (admin only)
 
     Desk:
       type: object

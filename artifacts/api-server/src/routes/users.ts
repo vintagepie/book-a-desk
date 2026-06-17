@@ -76,8 +76,8 @@ router.patch("/:id", authenticate, async (req: AuthRequest, res) => {
     if (req.user!.role !== "admin" && req.user!.id !== id) {
       res.status(403).json({ error: "Forbidden" }); return;
     }
-    const { name, role, department, isActive } = req.body as {
-      name?: string; role?: string; department?: string; isActive?: boolean;
+    const { name, role, department, isActive, password } = req.body as {
+      name?: string; role?: string; department?: string; isActive?: boolean; password?: string;
     };
     const updateData: Partial<typeof usersTable.$inferInsert> = {};
     if (name !== undefined) updateData.name = name;
@@ -85,6 +85,7 @@ router.patch("/:id", authenticate, async (req: AuthRequest, res) => {
     if (req.user!.role === "admin") {
       if (role !== undefined) updateData.role = role;
       if (isActive !== undefined) updateData.isActive = isActive;
+      if (password) updateData.passwordHash = await bcrypt.hash(password, 12);
     }
     const [user] = await db.update(usersTable).set(updateData).where(eq(usersTable.id, id)).returning();
     if (!user) { res.status(404).json({ error: "User not found" }); return; }
