@@ -506,10 +506,10 @@ export default function FloorMap() {
       {isLoading ? (
         <div className="flex items-center justify-center h-64 text-muted-foreground">Loading floor plan…</div>
       ) : (
-        <div className="flex gap-4">
-          {/* ── Floor plan canvas ── */}
-          <div className="flex-1 border-2 border-border rounded-2xl bg-white shadow-sm overflow-x-auto">
-            <div className="min-w-[720px] p-6">
+        <div className="space-y-4">
+          {/* ── Floor plan canvas (full width, scrolls horizontally) ── */}
+          <div className="border-2 border-border rounded-2xl bg-white shadow-sm overflow-x-auto">
+            <div className="w-max p-4">
               {/* Floor label */}
               <div className="text-center text-[10px] font-bold uppercase tracking-widest text-gray-300 mb-4">
                 Floor 1 — Office Layout
@@ -653,29 +653,32 @@ export default function FloorMap() {
             </div>
           </div>
 
-          {/* ── Detail panel ── */}
-          <div className="w-56 shrink-0 space-y-3">
-            {(selectedDesk || selectedRoom) ? (
-              <DetailPanel
-                item={selectedDesk ? { type: "desk", desk: selectedDesk } : { type: "room", room: selectedRoom! }}
-                dateStr={dateStr}
-                onClose={() => { setSelectedDesk(null); setSelectedRoomId(null); }}
-                onBookDesk={handleBookDesk}
-                onCancelDesk={handleCancelDesk}
-                isBooking={bookMutation.isPending}
-                isCancelling={cancelMutation.isPending}
-              />
-            ) : (
-              <Card className="border-dashed">
-                <CardContent className="pt-6 pb-6 flex flex-col items-center justify-center text-center gap-2">
-                  <Monitor className="w-8 h-8 text-muted-foreground/30" />
-                  <p className="text-xs text-muted-foreground">Click a desk or meeting room to view details</p>
-                </CardContent>
-              </Card>
-            )}
+          {/* ── Bottom row: detail panel + floor summary (side by side) ── */}
+          <div className="flex flex-wrap gap-4 items-start">
+            {/* Detail panel */}
+            <div className="flex-1 min-w-[220px] max-w-sm">
+              {(selectedDesk || selectedRoom) ? (
+                <DetailPanel
+                  item={selectedDesk ? { type: "desk", desk: selectedDesk } : { type: "room", room: selectedRoom! }}
+                  dateStr={dateStr}
+                  onClose={() => { setSelectedDesk(null); setSelectedRoomId(null); }}
+                  onBookDesk={handleBookDesk}
+                  onCancelDesk={handleCancelDesk}
+                  isBooking={bookMutation.isPending}
+                  isCancelling={cancelMutation.isPending}
+                />
+              ) : (
+                <Card className="border-dashed">
+                  <CardContent className="pt-6 pb-6 flex flex-col items-center justify-center text-center gap-2">
+                    <Monitor className="w-8 h-8 text-muted-foreground/30" />
+                    <p className="text-xs text-muted-foreground">Click any desk or meeting room above to view details</p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
 
             {/* Floor summary */}
-            <Card>
+            <Card className="flex-1 min-w-[180px] max-w-xs">
               <CardHeader className="pb-2">
                 <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Floor Summary</CardTitle>
               </CardHeader>
