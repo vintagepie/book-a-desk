@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
-import { Bell, LayoutDashboard, Monitor, CalendarDays, BookOpen, CalendarCheck, QrCode, Users, Wrench, BarChart3, Building2, Map } from "lucide-react";
+import { Bell, LayoutDashboard, Monitor, CalendarDays, BookOpen, CalendarCheck, QrCode, Users, Wrench, BarChart3, Building2, Map, UserCheck } from "lucide-react";
 import { useListNotifications } from "@workspace/api-client-react";
 
 interface NavItem {
@@ -14,6 +14,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["employee", "team_lead", "admin"] },
   { href: "/desks", label: "Browse Desks", icon: Monitor, roles: ["employee", "team_lead", "admin"] },
   { href: "/floor-map", label: "Floor Map", icon: Map, roles: ["employee", "team_lead", "admin"] },
+  { href: "/presence", label: "Who's In Today", icon: UserCheck, roles: ["employee", "team_lead", "admin"] },
   { href: "/my-bookings", label: "My Desk Bookings", icon: BookOpen, roles: ["employee", "team_lead", "admin"] },
   { href: "/check-in", label: "Check In", icon: QrCode, roles: ["employee", "team_lead", "admin"] },
   { href: "/meeting-rooms", label: "Meeting Rooms", icon: Building2, roles: ["team_lead", "admin"] },
