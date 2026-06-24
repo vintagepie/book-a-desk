@@ -158,7 +158,7 @@ router.post("/", authenticate, async (req: AuthRequest, res) => {
 // GET /api/desk-bookings/:id
 router.get("/:id", authenticate, async (req: AuthRequest, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(String(req.params.id), 10);
     const booking = await getBookingWithRelations(id);
     if (!booking) { res.status(404).json({ error: "Booking not found" }); return; }
     if (req.user!.role !== "admin" && booking.userId !== req.user!.id) {
@@ -174,7 +174,7 @@ router.get("/:id", authenticate, async (req: AuthRequest, res) => {
 // POST /api/desk-bookings/:id/cancel
 router.post("/:id/cancel", authenticate, async (req: AuthRequest, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(String(req.params.id), 10);
     const [booking] = await db.select().from(deskBookingsTable).where(eq(deskBookingsTable.id, id)).limit(1);
     if (!booking) { res.status(404).json({ error: "Booking not found" }); return; }
     if (req.user!.role !== "admin" && booking.userId !== req.user!.id) {
@@ -212,7 +212,7 @@ router.post("/:id/cancel", authenticate, async (req: AuthRequest, res) => {
 // POST /api/desk-bookings/:id/checkin
 router.post("/:id/checkin", authenticate, async (req: AuthRequest, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(String(req.params.id), 10);
     const { qrCode } = req.body as { qrCode: string };
     if (!qrCode) { res.status(400).json({ error: "qrCode required" }); return; }
 

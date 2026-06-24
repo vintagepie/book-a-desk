@@ -153,7 +153,7 @@ router.post("/", authenticate, requireRole("admin", "team_lead"), async (req: Au
 // GET /api/meeting-room-bookings/:id
 router.get("/:id", authenticate, async (req: AuthRequest, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(String(req.params.id), 10);
     const booking = await getBookingWithRelations(id);
     if (!booking) { res.status(404).json({ error: "Booking not found" }); return; }
     if (req.user!.role !== "admin" && booking.userId !== req.user!.id) {
@@ -169,7 +169,7 @@ router.get("/:id", authenticate, async (req: AuthRequest, res) => {
 // PATCH /api/meeting-room-bookings/:id
 router.patch("/:id", authenticate, requireRole("admin", "team_lead"), async (req: AuthRequest, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(String(req.params.id), 10);
     const [booking] = await db.select().from(meetingRoomBookingsTable).where(eq(meetingRoomBookingsTable.id, id)).limit(1);
     if (!booking) { res.status(404).json({ error: "Booking not found" }); return; }
     if (req.user!.role !== "admin" && booking.userId !== req.user!.id) {
@@ -198,7 +198,7 @@ router.patch("/:id", authenticate, requireRole("admin", "team_lead"), async (req
 // POST /api/meeting-room-bookings/:id/cancel
 router.post("/:id/cancel", authenticate, requireRole("admin", "team_lead"), async (req: AuthRequest, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(String(req.params.id), 10);
     const [booking] = await db.select().from(meetingRoomBookingsTable).where(eq(meetingRoomBookingsTable.id, id)).limit(1);
     if (!booking) { res.status(404).json({ error: "Booking not found" }); return; }
     if (req.user!.role !== "admin" && booking.userId !== req.user!.id) {

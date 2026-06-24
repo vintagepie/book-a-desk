@@ -853,6 +853,21 @@ paths:
                 items:
                   $ref: "#/components/schemas/DailyOccupancyItem"
 
+  /analytics/admin-dashboard:
+    get:
+      operationId: getAdminDashboard
+      tags: [analytics]
+      summary: Get comprehensive admin dashboard analytics
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Admin dashboard comprehensive data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminDashboardResponse"
+
   # DASHBOARD SUMMARY
   /dashboard/summary:
     get:
@@ -1360,3 +1375,8 @@ components:
           type: boolean
         message:
           type: ["string", "null"]
+
+    AdminDashboardResponse:
+      type: object
+      description: "Admin dashboard data payload"
+      additionalProperties: true

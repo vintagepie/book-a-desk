@@ -336,6 +336,11 @@ export interface SuccessResponse {
   message?: string | null;
 }
 
+/**
+ * Admin dashboard data payload
+ */
+export interface AdminDashboardResponse { [key: string]: unknown }
+
 export type ListDesksParams = {
 date?: string;
 /**

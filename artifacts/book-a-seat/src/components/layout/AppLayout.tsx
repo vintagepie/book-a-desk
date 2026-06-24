@@ -10,12 +10,13 @@ interface NavItem {
   roles: string[];
 }
 
+import { Settings, FileText } from "lucide-react";
+
 const NAV_ITEMS: NavItem[] = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["employee", "team_lead", "admin"] },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["employee", "team_lead"] },
   { href: "/desks", label: "Browse Desks", icon: Monitor, roles: ["employee", "team_lead", "admin"] },
   { href: "/floor-map", label: "Floor Map", icon: Map, roles: ["employee", "team_lead", "admin"] },
-  { href: "/presence", label: "Who's In Today", icon: UserCheck, roles: ["employee", "team_lead", "admin"] },
-  { href: "/my-bookings", label: "My Desk Bookings", icon: BookOpen, roles: ["employee", "team_lead", "admin"] },
+  { href: "/my-bookings", label: "My Bookings", icon: BookOpen, roles: ["employee", "team_lead", "admin"] },
   { href: "/check-in", label: "Check In", icon: QrCode, roles: ["employee", "team_lead", "admin"] },
   { href: "/meeting-rooms", label: "Meeting Rooms", icon: Building2, roles: ["team_lead", "admin"] },
   { href: "/my-meetings", label: "My Meetings", icon: CalendarCheck, roles: ["team_lead", "admin"] },
@@ -23,11 +24,13 @@ const NAV_ITEMS: NavItem[] = [
 ];
 
 const ADMIN_ITEMS: NavItem[] = [
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["admin"] },
   { href: "/admin/desks", label: "Manage Desks", icon: Monitor, roles: ["admin"] },
-  { href: "/admin/meeting-rooms", label: "Room Overview", icon: CalendarDays, roles: ["admin", "team_lead"] },
-  { href: "/admin/users", label: "Users", icon: Users, roles: ["admin"] },
+  { href: "/admin/users", label: "User Management", icon: Users, roles: ["admin"] },
   { href: "/admin/maintenance", label: "Maintenance", icon: Wrench, roles: ["admin"] },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart3, roles: ["admin"] },
+  { href: "/admin/reports", label: "Reports", icon: FileText, roles: ["admin"] },
+  { href: "/admin/settings", label: "System Settings", icon: Settings, roles: ["admin"] },
 ];
 
 function NavLink({ item, location }: { item: NavItem; location: string }) {

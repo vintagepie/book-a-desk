@@ -55,7 +55,7 @@ router.post("/", authenticate, requireRole("admin"), async (req, res) => {
 // GET /api/users/:id
 router.get("/:id", authenticate, async (req: AuthRequest, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(String(req.params.id), 10);
     if (req.user!.role !== "admin" && req.user!.id !== id) {
       res.status(403).json({ error: "Forbidden" });
       return;
@@ -72,7 +72,7 @@ router.get("/:id", authenticate, async (req: AuthRequest, res) => {
 // PATCH /api/users/:id
 router.patch("/:id", authenticate, async (req: AuthRequest, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(String(req.params.id), 10);
     if (req.user!.role !== "admin" && req.user!.id !== id) {
       res.status(403).json({ error: "Forbidden" }); return;
     }
@@ -99,7 +99,7 @@ router.patch("/:id", authenticate, async (req: AuthRequest, res) => {
 // DELETE /api/users/:id
 router.delete("/:id", authenticate, requireRole("admin"), async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(String(req.params.id), 10);
     await db.delete(usersTable).where(eq(usersTable.id, id));
     res.status(204).send();
   } catch (err) {

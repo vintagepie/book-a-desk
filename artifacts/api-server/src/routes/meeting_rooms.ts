@@ -53,7 +53,7 @@ router.post("/", authenticate, requireRole("admin"), async (req, res) => {
 // GET /api/meeting-rooms/:id
 router.get("/:id", authenticate, async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(String(req.params.id), 10);
     const [room] = await db.select().from(meetingRoomsTable).where(eq(meetingRoomsTable.id, id)).limit(1);
     if (!room) { res.status(404).json({ error: "Meeting room not found" }); return; }
     res.json(formatRoom(room));
@@ -66,7 +66,7 @@ router.get("/:id", authenticate, async (req, res) => {
 // PATCH /api/meeting-rooms/:id
 router.patch("/:id", authenticate, requireRole("admin"), async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(String(req.params.id), 10);
     const { name, capacity, floor, facilities, description, status } = req.body as {
       name?: string; capacity?: number; floor?: string; facilities?: string; description?: string; status?: string;
     };
@@ -89,7 +89,7 @@ router.patch("/:id", authenticate, requireRole("admin"), async (req, res) => {
 // DELETE /api/meeting-rooms/:id
 router.delete("/:id", authenticate, requireRole("admin"), async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(String(req.params.id), 10);
     await db.delete(meetingRoomsTable).where(eq(meetingRoomsTable.id, id));
     res.status(204).send();
   } catch (err) {

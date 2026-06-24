@@ -2,8 +2,9 @@ import { Router } from "express";
 import bcrypt from "bcryptjs";
 import { db, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
-import { authenticate, generateToken, AuthRequest } from "../middlewares/auth";
+import { authenticate, generateToken, AuthRequest, requireRole } from "../middlewares/auth";
 import { logger } from "../lib/logger";
+import { seedDatabase } from "../lib/seed";
 
 const router = Router();
 
@@ -70,6 +71,15 @@ router.get("/me", authenticate, async (req: AuthRequest, res) => {
   } catch (err) {
     logger.error({ err }, "Get me error");
     res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.get("/seed", async (req, res) => {
+  try {
+    await seedDatabase();
+    res.json({ message: "Database seeded successfully" });
+  } catch (err) {
+    res.status(500).json({ error: "Seed failed" });
   }
 });
 

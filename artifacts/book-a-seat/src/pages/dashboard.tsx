@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import { format, isToday, isTomorrow } from "date-fns";
 import { Monitor, Building2, Bell, CalendarCheck, QrCode, TrendingUp } from "lucide-react";
+import AdminDashboard from "./admin/dashboard";
 
 function formatDateLabel(dateStr: string) {
   const d = new Date(dateStr);
@@ -27,6 +28,10 @@ export default function Dashboard() {
   const { data: summary, isLoading: summaryLoading } = useGetDashboardSummary();
   const { data: myBookingsData } = useListDeskBookings({ userId: user?.id, limit: 5 });
   const { data: myMeetingsData } = useListMeetingRoomBookings({ userId: user?.id, limit: 5 });
+
+  if ((user?.role as string) === "admin") {
+    return <AdminDashboard />;
+  }
 
   const myBookings = myBookingsData?.data ?? [];
   const myMeetings = myMeetingsData?.data ?? [];
@@ -69,7 +74,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        {(user?.role === "team_lead" || user?.role === "admin") && (
+        {(user?.role as string === "team_lead" || user?.role as string === "admin") && (
           <Card>
             <CardContent className="p-5">
               <div className="flex items-center justify-between mb-3">
@@ -92,19 +97,6 @@ export default function Dashboard() {
             <p className="text-xs text-muted-foreground mt-1">unread</p>
           </CardContent>
         </Card>
-
-        {user?.role === "admin" && (
-          <Card>
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Available Desks</span>
-                <TrendingUp className="w-4 h-4 text-primary" />
-              </div>
-              <div className="text-3xl font-bold">{summaryLoading ? "—" : (summary?.availableDesksToday ?? 0)}</div>
-              <p className="text-xs text-muted-foreground mt-1">this floor</p>
-            </CardContent>
-          </Card>
-        )}
       </div>
 
       {/* Quick actions */}
@@ -119,7 +111,7 @@ export default function Dashboard() {
             <QrCode className="w-4 h-4 mr-2" />
             Check In
           </Button>
-          {(user?.role === "team_lead" || user?.role === "admin") && (
+          {((user?.role as string) === "team_lead" || (user?.role as string) === "admin") && (
             <Button variant="outline" onClick={() => setLocation("/meeting-rooms/book")}>
               <Building2 className="w-4 h-4 mr-2" />
               Book a Room
@@ -176,7 +168,7 @@ export default function Dashboard() {
         </Card>
 
         {/* Upcoming meeting room bookings (for team_lead and admin) */}
-        {(user?.role === "team_lead" || user?.role === "admin") && (
+        {(user?.role as string === "team_lead" || user?.role as string === "admin") && (
           <Card>
             <CardHeader className="pb-3">
               <div className="flex justify-between items-center">
@@ -210,23 +202,6 @@ export default function Dashboard() {
                   ))}
                 </div>
               )}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* For employees: show notifications teaser */}
-        {user?.role === "employee" && (
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">Recent Notifications</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-6 text-muted-foreground text-sm">
-                <Button variant="outline" onClick={() => setLocation("/notifications")}>
-                  <Bell className="w-4 h-4 mr-2" />
-                  View Notifications
-                </Button>
-              </div>
             </CardContent>
           </Card>
         )}

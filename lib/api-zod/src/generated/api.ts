@@ -856,6 +856,12 @@ export const GetDailyOccupancyResponse = zod.array(GetDailyOccupancyResponseItem
 
 
 /**
+ * @summary Get comprehensive admin dashboard analytics
+ */
+export const GetAdminDashboardResponse = zod.record(zod.string(), zod.unknown()).describe('Admin dashboard data payload')
+
+
+/**
  * @summary Get dashboard summary for logged-in user
  */
 export const GetDashboardSummaryResponse = zod.object({

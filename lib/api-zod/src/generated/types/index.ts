@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './adminDashboardResponse';
 export * from './analyticsOverview';
 export * from './authResponse';
 export * from './checkInInput';

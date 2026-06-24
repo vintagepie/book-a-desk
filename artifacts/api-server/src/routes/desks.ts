@@ -68,7 +68,7 @@ router.post("/", authenticate, requireRole("admin"), async (req, res) => {
 // GET /api/desks/:id
 router.get("/:id", authenticate, async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(String(req.params.id), 10);
     const [desk] = await db.select().from(desksTable).where(eq(desksTable.id, id)).limit(1);
     if (!desk) { res.status(404).json({ error: "Desk not found" }); return; }
     res.json(formatDesk(desk));
@@ -81,7 +81,7 @@ router.get("/:id", authenticate, async (req, res) => {
 // PATCH /api/desks/:id
 router.patch("/:id", authenticate, requireRole("admin"), async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(String(req.params.id), 10);
     const { name, floor, zone, amenities, status } = req.body as { name?: string; floor?: string; zone?: string; amenities?: string; status?: string };
     const updateData: Partial<typeof desksTable.$inferInsert> = {};
     if (name !== undefined) updateData.name = name;
@@ -101,7 +101,7 @@ router.patch("/:id", authenticate, requireRole("admin"), async (req, res) => {
 // DELETE /api/desks/:id
 router.delete("/:id", authenticate, requireRole("admin"), async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(String(req.params.id), 10);
     await db.delete(desksTable).where(eq(desksTable.id, id));
     res.status(204).send();
   } catch (err) {
@@ -113,7 +113,7 @@ router.delete("/:id", authenticate, requireRole("admin"), async (req, res) => {
 // POST /api/desks/:id/maintenance
 router.post("/:id/maintenance", authenticate, requireRole("admin"), async (req: AuthRequest, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(String(req.params.id), 10);
     const { reason } = req.body as { reason: string };
     if (!reason) { res.status(400).json({ error: "reason required" }); return; }
 
@@ -150,7 +150,7 @@ router.post("/:id/maintenance", authenticate, requireRole("admin"), async (req: 
 // POST /api/desks/:id/restore
 router.post("/:id/restore", authenticate, requireRole("admin"), async (req: AuthRequest, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(String(req.params.id), 10);
     const [desk] = await db.update(desksTable).set({ status: "available" }).where(eq(desksTable.id, id)).returning();
     if (!desk) { res.status(404).json({ error: "Desk not found" }); return; }
     await db.insert(maintenanceLogsTable).values({ deskId: id, action: "restored", reason: "Restored by admin", performedBy: req.user!.id });
