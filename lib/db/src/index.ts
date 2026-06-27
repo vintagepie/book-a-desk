@@ -15,6 +15,12 @@ export const pool = new Pool({
   connectionString: dbUrl,
   ssl: { rejectUnauthorized: false }
 });
+
+// Prevent unhandled promise rejections from crashing the process when idle clients fail
+pool.on('error', (err) => {
+  console.error('Unexpected error on idle pg client', err);
+});
+
 export const db = drizzle(pool, { schema });
 
 export * from "./schema";
